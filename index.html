@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PaniniTracker 🏆 - Mundial 2026</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px;
+    padding-bottom: 100px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 {
+    font-size: 1.5rem;
+    text-align: center;
+    padding: 12px 0;
+  }
+  h1 span { color: var(--yellow); }
+  .subtitle { text-align: center; color: var(--muted); margin-bottom: 16px; font-size: 0.85rem; }
+
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-green { background: var(--green); color: white; }
+  .btn-green:hover { background: #16a34a; }
+  .btn-yellow { background: var(--yellow); color: #0f172a; }
+  .btn-yellow:hover { background: #d97706; }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:hover { background: #dc2626; }
+  .btn-outline {
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--muted); }
+  .btn-sm { padding: 8px 16px; font-size: 0.8rem; }
+  .btn-block { width: 100%; }
+
+  /* Stats bar */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 1.5rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .stat-card.green .num { color: var(--green); }
+  .stat-card.yellow .num { color: var(--yellow); }
+  .stat-card.red .num { color: var(--red); }
+
+  /* Progress */
+  .progress-container {
+    background: var(--card);
+    border-radius: 20px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--accent));
+    border-radius: 20px;
+    transition: width 0.3s ease;
+  }
+
+  /* Secciones */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.2s;
+  }
+  .section-header:hover { border-color: var(--muted); }
+  .section-header .info { flex: 1; }
+  .section-header .name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .section-header .progress-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .section-header .badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .badge-complete { background: rgba(34,197,94,0.2); color: var(--green); }
+  .badge-progress { background: rgba(59,130,246,0.2); color: var(--accent); }
+  .badge-empty { background: rgba(239,68,68,0.2); color: var(--red); }
+  .badge-special { background: rgba(234,179,8,0.2); color: var(--yellow); }
+  .section-header .arrow {
+    font-size: 1.2rem;
+    color: var(--muted);
+    transition: transform 0.2s;
+    margin-left: 8px;
+  }
+  .section-header .arrow.open { transform: rotate(180deg); }
+
+  .section-body {
+    display: none;
+    padding: 0 4px 12px 4px;
+  }
+  .section-body.open { display: block; }
+
+  .team-flag {
+    width: 28px;
+    height: 18px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  /* Sticker grid within section */
+  .sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .sticker {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 48px;
+    gap: 1px;
+  }
+  .sticker .num { font-size: 0.85rem; }
+  .sticker .dup-label { font-size: 0.55rem; color: var(--muted); }
+  .sticker.have {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: var(--green);
+  }
+  .sticker.have .num { color: var(--green); }
+  .sticker.repeated {
+    background: rgba(234, 179, 8, 0.12);
+    border-color: var(--yellow);
+  }
+  .sticker.repeated .num { color: var(--yellow); }
+  .sticker:active { transform: scale(0.9); }
+
+  /* Actions row */
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .actions .btn { flex: 1; min-width: 100px; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal h2 { margin-bottom: 12px; font-size: 1.2rem; }
+  .modal h3 { margin: 14px 0 6px; color: var(--muted); font-size: 0.9rem; }
+  .modal textarea {
+    width: 100%;
+    height: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text);
+    font-size: 0.82rem;
+    font-family: monospace;
+    resize: vertical;
+  }
+  .modal .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .modal .btn-row .btn { flex: 1; }
+  .modal .modal-close-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 0.9rem;
+    margin-top: 8px;
+  }
+
+  /* Form fields in modal */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+  /* Config table for teams */
+  .config-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .config-row .emoji { font-size: 1.2rem; width: 30px; text-align: center; }
+  .config-row .cname { flex: 1; }
+  .config-row .range { color: var(--muted); width: 60px; text-align: center; }
+  .config-row .del { color: var(--red); cursor: pointer; padding: 4px 8px; font-size: 1.1rem; }
+
+  .add-team-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .add-team-row input, .add-team-row select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.85rem;
+    outline: none;
+    flex: 1;
+    min-width: 60px;
+  }
+  .add-team-row input:focus { border-color: var(--accent); }
+
+  /* Bottom nav */
+  .bottom-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+  }
+  .bottom-actions .btn { flex: 1; font-size: 0.85rem; padding: 10px 12px; }
+
+  /* Empty */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+  @media (max-width: 480px) {
+    .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); }
+    .sticker { min-height: 44px; font-size: 0.65rem; }
+    .sticker .num { font-size: 0.8rem; }
+    .stats { gap: 6px; }
+    .stat-card { padding: 8px; }
+    .stat-card .num { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🏆 PaniniTracker <span>2026</span></h1>
+  <p class="subtitle">Controla tu colección por equipos y comparte</p>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card green">
+      <div class="num" id="statHave">0</div>
+      <div class="label">TENGO</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="num" id="statRepeat">0</div>
+      <div class="label">REPETIDAS</div>
+    </div>
+    <div class="stat-card red">
+      <div class="num" id="statMissing">0</div>
+      <div class="label">FALTAN</div>
+    </div>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar" style="display:flex;gap:6px;margin-bottom:12px;">
+    <input type="text" id="searchInput" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:0.9rem;outline:none;" placeholder="🔍 Buscar cromo o equipo..." oninput="renderAll()">
+    <button class="btn btn-sm btn-outline" onclick="document.getElementById('searchInput').value='';renderAll()">✕</button>
+  </div>
+
+  <!-- Sections list -->
+  <div id="sectionsContainer"></div>
+
+  <!-- Bottom actions -->
+  <div class="bottom-actions">
+    <button class="btn btn-green btn-sm" onclick="showShare()">📤 Compartir</button>
+    <button class="btn btn-yellow btn-sm" onclick="showConfig()">⚙️ Equipos</button>
+    <button class="btn btn-outline btn-sm" onclick="resetAll()">🗑️</button>
+  </div>
+
+  <!-- SHARE MODAL -->
+  <div class="modal-overlay" id="shareModal">
+    <div class="modal">
+      <h2>📤 Compartir lista</h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:8px;">
+        Copia esto y envíalo a tu amigo. Así sabrá qué te falta y qué repetidas tienes.
+      </p>
+      <div id="shareContent"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-sm" onclick="copyShare()">📋 Copiar</button>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('shareModal')">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- CONFIG MODAL -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal" style="max-width:600px;">
+      <h2>⚙️ Equipos y secciones</h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;">
+        Aquí puedes añadir, quitar y ordenar equipos. Cada equipo tiene cromos numerados (ej: del 1 al 20). Añade también secciones extra (estadios, leyendas, etc.)
+      </p>
+      <div id="configList"></div>
+
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <h3 style="font-size:0.9rem;margin-bottom:8px;">➕ Añadir equipo/sección</h3>
+        <div class="add-team-row">
+          <input type="text" id="newTeamName" placeholder="Nombre (ej: España, Argentina...)" style="flex:2;">
+          <input type="text" id="newTeamInitial" placeholder="🇪🇸 bandera" style="flex:0.5;min-width:50px;text-align:center;font-size:1.2rem;">
+          <input type="number" id="newTeamCount" placeholder="Cromos" style="flex:0.7;min-width:60px;" value="20">
+          <button class="btn btn-primary btn-sm" onclick="addTeam()">➕</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <select id="newTeamType" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.85rem;">
+            <option value="team">Equipo</option>
+            <option value="extra">Sección extra</option>
+          </select>
+          <input type="number" id="newTeamStart" placeholder="Desde nº" style="flex:0.5;min-width:50px;" value="1">
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <button class="btn btn-green btn-sm btn-block" onclick="addDefaultTeams()">🌍 Añadir equipos Mundial 2026</button>
+        <p style="color:var(--muted);font-size:0.75rem;margin-top:4px;text-align:center;">Añade los 48 equipos + extras con valores por defecto (luego ajustas)</p>
+      </div>
+
+      <button class="modal-close-btn" onclick="closeModal('configModal');renderAll();saveState();">Hecho ✅</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Data structure:
+  // sections = [
+  //   { id: 'esp', name: 'España', emoji: '🇪🇸', type: 'team', start: 1, count: 20 },
+  //   { id: 'extra1', name: 'Estadios', emoji: '🏟️', type: 'extra', start: 901, count: 10 },
+  // ]
+  // data = { 'esp:1': 0, 'esp:2': 0, ... }  // 0=no, 1=tengo, 2+=repetidas
+
+  let sections = [];
+  let data = {};
+
+  // Default: 48 teams for 2026 World Cup
+  const TEAMS_2026 = [
+    '🇺🇸 USA', '🇨🇦 Canadá', '🇲🇽 México',
+    '🇦🇷 Argentina', '🇧🇷 Brasil', '🇺🇾 Uruguay',
+    '🇨🇴 Colombia', '🇪🇨 Ecuador', '🇵🇾 Paraguay',
+    '🇵🇪 Perú', '🇻🇪 Venezuela', '🇧🇴 Bolivia',
+    '🇪🇸 España', '🇩🇪 Alemania', '🇫🇷 Francia',
+    '🇮🇹 Italia', '🇵🇹 Portugal', '🇳🇱 Países Bajos',
+    '🇧🇪 Bélgica', '🇭🇷 Croacia', '🇬🇧 Inglaterra',
+    '🇩🇰 Dinamarca', '🇨🇭 Suiza', '🇷🇸 Serbia',
+    '🇸🇪 Suecia', '🇵🇱 Polonia', '🇺🇦 Ucrania',
+    '🇹🇷 Turquía', '🇨🇿 Rep. Checa', '🇦🇹 Austria',
+    '🇭🇺 Hungría', '🇷🇴 Rumanía', '🇬🇷 Grecia',
+    '🇳🇬 Nigeria', '🇸🇳 Senegal', '🇲🇦 Marruecos',
+    '🇩🇿 Argelia', '🇪🇬 Egipto', '🇬🇭 Ghana',
+    '🇨🇲 Camerún', '🇨🇮 Costa de Marfil', '🇿🇦 Sudáfrica',
+    '🇯🇵 Japón', '🇰🇷 Corea del Sur', '🇸🇦 Arabia Saudí',
+    '🇮🇷 Irán', '🇦🇺 Australia', '🇶🇦 Qatar',
+  ];
+
+  function generateId() {
+    return 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+  }
+
+  function initDefault() {
+    // Set some default teams to get started
+    sections = [
+      { id: generateId(), name: 'España', emoji: '🇪🇸', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Argentina', emoji: '🇦🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Brasil', emoji: '🇧🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Francia', emoji: '🇫🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Alemania', emoji: '🇩🇪', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Inglaterra', emoji: '🇬🇧', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Italia', emoji: '🇮🇹', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Estadios', emoji: '🏟️', type: 'extra', start: 1, count: 16 },
+      { id: generateId(), name: 'Extras', emoji: '⭐', type: 'extra', start: 1, count: 30 },
+    ];
+    rebuildData();
+    saveState();
+  }
+
+  function rebuildData() {
+    data = {};
+    for (const sec of sections) {
+      for (let i = sec.start; i < sec.start + sec.count; i++) {
+        data[sec.id + ':' + i] = 0;
+      }
+    }
+  }
+
+  function getSectionTotal(sec) {
+    return sec.count;
+  }
+
+  function getSectionHave(sec) {
+    let count = 0;
+    for (let i = sec.start; i < sec.start + sec.count; i++) {
+      const v = data[sec.id + ':' + i] || 0;
+      if (v >= 1) count++;
+    }
+    return count;
+  }
+
+  function getSectionRepeated(sec) {
+    let count = 0;
+    for (let i = sec.start; i < sec.start + sec.count; i++) {
+      const v = data[sec.id + ':' + i] || 0;
+      if (v >= 2) count += (v - 1);
+    }
+    return count;
+  }
+
+  function getGlobalStats() {
+    let have = 0, repeat = 0, missing = 0, total = 0;
+    for (const sec of sections) {
+      for (let i = sec.start; i < sec.start + sec.count; i++) {
+        total++;
+        const v = data[sec.id + ':' + i] || 0;
+        if (v >= 1) have++;
+        if (v >= 2) repeat += (v - 1);
+        if (v === 0) missing++;
+      }
+    }
+    return { have, repeat, missing, total };
+  }
+
+  function renderAll() {
+    renderSections();
+    updateStats();
+  }
+
+  function renderSections() {
+    const container = document.getElementById('sectionsContainer');
+    const search = document.getElementById('searchInput').value.trim().toLowerCase();
+    let html = '';
+
+    for (const sec of sections) {
+      const total = getSectionTotal(sec);
+      const have = getSectionHave(sec);
+      const repeat = getSectionRepeated(sec);
+      const missing = total - have;
+      const pct = total > 0 ? Math.round((have / total) * 100) : 0;
+
+      let badge = '';
+      if (have === total && total > 0) badge = '<span class="badge badge-complete">Completo</span>';
+      else if (have > 0) badge = `<span class="badge badge-progress">${pct}%</span>`;
+      else badge = '<span class="badge badge-empty">Vacío</span>';
+      if (repeat > 0) badge += ' <span class="badge badge-special">🟡×' + repeat + '</span>';
+
+      const secId = 'sec_' + sec.id;
+      const isOpen = localStorage.getItem('panini_open_' + sec.id) === 'true';
+
+      // Filter by search
+      let showSection = true;
+      if (search) {
+        // Check if any sticker in this section matches
+        let match = false;
+        if (sec.name.toLowerCase().includes(search)) match = true;
+        if (sec.emoji && sec.emoji.includes(search)) match = true;
+        // Check range search
+        const rangeMatch = search.match(/^(\d+)-(\d+)$/);
+        if (rangeMatch) {
+          const from = parseInt(rangeMatch[1]);
+          const to = parseInt(rangeMatch[2]);
+          const secEnd = sec.start + sec.count - 1;
+          if (from <= secEnd && to >= sec.start) match = true;
+        } else if (!isNaN(search)) {
+          const n = parseInt(search);
+          if (n >= sec.start && n < sec.start + sec.count) match = true;
+        }
+        if (!match) showSection = false;
+      }
+
+      if (!showSection) continue;
+
+      html += `<div class="section-header" onclick="toggleSection('${sec.id}')">
+        <div class="info">
+          <div class="name">
+            <span class="team-flag">${sec.emoji || (sec.type === 'extra' ? '⭐' : '🏳️')}</span>
+            ${sec.name}
+            <span style="font-size:0.75rem;color:var(--muted);font-weight:400;">(${sec.start}-${sec.start+sec.count-1})</span>
+            ${badge}
+          </div>
+          <div class="progress-text">${have}/${total} · ${missing > 0 ? '❌ Faltan ' + missing : '✅ Completo'}</div>
+        </div>
+        <div class="arrow ${isOpen ? 'open' : ''}">▼</div>
+      </div>`;
+
+      const display = isOpen ? 'open' : '';
+      html += `<div class="section-body ${display}" id="${secId}">`;
+      html += renderStickerGrid(sec);
+      html += `</div>`;
+    }
+
+    if (!html) {
+      html = `<div class="empty-state"><div class="icon">📭</div><p>No hay resultados. Prueba a buscar otro número o equipo, o añade equipos desde ⚙️</p></div>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function renderStickerGrid(sec) {
+    let html = '';
+    for (let i = sec.start; i < sec.start + sec.count; i++) {
+      const key = sec.id + ':' + i;
+      const val = data[key] || 0;
+      let cls = '';
+      let label = `<span class="num" style="color:${val === 0 ? 'var(--muted)' : ''}">${i}</span>`;
+      if (val === 1) { cls = 'have'; }
+      else if (val >= 2) {
+        cls = 'repeated';
+        label = `<span class="num">${i}</span><span class="dup-label">×${val}</span>`;
+      }
+      html += `<div class="sticker ${cls}" onclick="clickSticker('${sec.id}',${i})" oncontextmenu="event.preventDefault();clickSticker('${sec.id}',${i})" title="Cromo #${i}${val > 0 ? ' (×'+val+')' : ' (falta)'}">${label}</div>`;
+    }
+    return html;
+  }
+
+  function toggleSection(id) {
+    const el = document.getElementById('sec_' + id);
+    if (!el) return;
+    const isOpen = el.classList.contains('open');
+    el.classList.toggle('open');
+    // Update arrow
+    const headers = document.querySelectorAll('.section-header');
+    for (const h of headers) {
+      if (h.querySelector('.arrow')) {
+        // Find the right one by checking next sibling
+        const next = h.nextElementSibling;
+        if (next && next.id === 'sec_' + id) {
+          h.querySelector('.arrow').classList.toggle('open');
+        }
+      }
+    }
+    localStorage.setItem('panini_open_' + id, !isOpen);
+  }
+
+  function clickSticker(secId, num) {
+    const key = secId + ':' + num;
+    const val = data[key] || 0;
+    if (val === 0) data[key] = 1;
+    else if (val === 1) data[key] = 2;
+    else if (val >= 99) data[key] = 0;
+    else data[key]++;
+    renderAll();
+    saveState();
+  }
+
+  function updateStats() {
+    const s = getGlobalStats();
+    document.getElementById('statHave').textContent = s.have;
+    document.getElementById('statRepeat').textContent = s.repeat;
+    document.getElementById('statMissing').textContent = s.missing;
+    const pct = s.total > 0 ? Math.round((s.have / s.total) * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  // -- CONFIG --
+  function showConfig() {
+    renderConfigList();
+    document.getElementById('configModal').classList.add('show');
+  }
+
+  function renderConfigList() {
+    const el = document.getElementById('configList');
+    let html = '';
+    for (let idx = 0; idx < sections.length; idx++) {
+      const s = sections[idx];
+      const label = s.type === 'extra' ? '⭐ Extra' : '⚽ Equipo';
+      html += `<div class="config-row">
+        <span class="emoji">${s.emoji || (s.type === 'extra' ? '⭐' : '🏳️')}</span>
+        <span class="cname">${s.name}</span>
+        <span class="range">${s.start}-${s.start+s.count-1}</span>
+        <span style="font-size:0.7rem;color:var(--muted);padding:0 6px;">${label}</span>
+        <span class="del" onclick="removeTeam(${idx})">✕</span>
+      </div>`;
+    }
+    if (!html) html = '<p style="color:var(--muted);text-align:center;padding:16px 0;">No hay equipos. Añade uno abajo.</p>';
+    el.innerHTML = html;
+  }
+
+  function addTeam() {
+    const name = document.getElementById('newTeamName').value.trim();
+    const emoji = document.getElementById('newTeamInitial').value.trim() || '🏳️';
+    const count = parseInt(document.getElementById('newTeamCount').value) || 20;
+    const type = document.getElementById('newTeamType').value;
+    const start = parseInt(document.getElementById('newTeamStart').value) || 1;
+
+    if (!name) { alert('Pon un nombre'); return; }
+    if (count < 1) { alert('Los cromos deben ser al menos 1'); return; }
+
+    sections.push({
+      id: generateId(),
+      name: name,
+      emoji: emoji,
+      type: type,
+      start: start,
+      count: count
+    });
+
+    // Init stickers
+    for (let i = start; i < start + count; i++) {
+      data[sections[sections.length-1].id + ':' + i] = 0;
+    }
+
+    document.getElementById('newTeamName').value = '';
+    document.getElementById('newTeamInitial').value = '';
+    renderConfigList();
+    saveState();
+  }
+
+  function removeTeam(idx) {
+    if (!confirm(`¿Quitar "${sections[idx].name}"?`)) return;
+    const sec = sections[idx];
+    // Remove data
+    for (let i = sec.start; i < sec.start + sec.count; i++) {
+      delete data[sec.id + ':' + i];
+    }
+    sections.splice(idx, 1);
+    renderConfigList();
+    saveState();
+  }
+
+  function addDefaultTeams() {
+    let numTeams = TEAMS_2026.length;
+    // Check how many we already have
+    const existingNames = new Set(sections.map(s => s.name.toLowerCase()));
+
+    let added = 0;
+    for (const t of TEAMS_2026) {
+      const name = t.substring(2).trim();
+      if (existingNames.has(name.toLowerCase())) continue;
+
+      const emoji = t.substring(0, 2);
+      const sec = {
+        id: generateId(),
+        name: name,
+        emoji: emoji,
+        type: 'team',
+        start: 1,
+        count: 20
+      };
+      sections.push(sec);
+      for (let i = 1; i <= 20; i++) {
+        data[sec.id + ':' + i] = 0;
+      }
+      added++;
+    }
+
+    // Add some extra sections
+    const extras = [
+      { name: 'Estadios', emoji: '🏟️', count: 16 },
+      { name: 'Mascota', emoji: '🦅', count: 6 },
+      { name: 'Balón', emoji: '⚽', count: 4 },
+      { name: 'Leyendas', emoji: '👑', count: 20 },
+    ];
+    for (const ex of extras) {
+      const sec = {
+        id: generateId(),
+        name: ex.name,
+        emoji: ex.emoji,
+        type: 'extra',
+        start: 1,
+        count: ex.count
+      };
+      sections.push(sec);
+      for (let i = 1; i <= ex.count; i++) {
+        data[sec.id + ':' + i] = 0;
+      }
+    }
+
+    renderConfigList();
+    renderAll();
+    saveState();
+    alert(`✅ Añadidos ${added} equipos + secciones extra. Ahora tienes ${sections.length} secciones en total.`);
+  }
+
+  function resetAll() {
+    if (!confirm('¿Borrar TODOS los datos (equipos y progreso)?')) return;
+    localStorage.clear();
+    sections = [];
+    data = {};
+    initDefault();
+    renderAll();
+  }
+
+  // -- SHARE --
+  function generateShareText() {
+    let text = '';
+    text += `🏆 PANINI MUNDIAL 2026\n`;
+    const s = getGlobalStats();
+    text += `📊 ${s.have}/${s.total} cromos (${Math.round((s.have/s.total)*100)}%)\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    // Repetidas - grouped by team
+    let allRepeats = [];
+    for (const sec of sections) {
+      for (let i = sec.start; i < sec.start + sec.count; i++) {
+        const v = data[sec.id + ':' + i] || 0;
+        if (v >= 2) {
+          allRepeats.push({ team: sec.name, emoji: sec.emoji, num: i, count: v - 1 });
+        }
+      }
+    }
+
+    if (allRepeats.length > 0) {
+      text += `🟡 REPETIDAS (${allRepeats.reduce((s,r) => s+r.count, 0)}):\n`;
+      // Group by team
+      const byTeam = {};
+      for (const r of allRepeats) {
+        if (!byTeam[r.team]) byTeam[r.team] = { emoji: r.emoji, nums: [] };
+        for (let c = 0; c < r.count; c++) byTeam[r.team].nums.push(r.num);
+      }
+      for (const [team, info] of Object.entries(byTeam)) {
+        text += `  ${info.emoji} ${team}: ${info.nums.sort((a,b) => a-b).join(', ')}\n`;
+      }
+      text += '\n';
+    }
+
+    // Faltantes
+    text += `❌ ME FALTAN (${s.missing}):\n`;
+    for (const sec of sections) {
+      const missing = [];
+      for (let i = sec.start; i < sec.start + sec.count; i++) {
+        const v = data[sec.id + ':' + i] || 0;
+        if (v === 0) missing.push(i);
+      }
+      if (missing.length > 0) {
+        // Group consecutive
+        const groups = [];
+        let start = missing[0], end = missing[0];
+        for (let i = 1; i < missing.length; i++) {
+          if (missing[i] === end + 1) { end = missing[i]; }
+          else {
+            groups.push(start === end ? `${start}` : `${start}-${end}`);
+            start = end = missing[i];
+          }
+        }
+        groups.push(start === end ? `${start}` : `${start}-${end}`);
+        text += `  ${sec.emoji || '⭐'} ${sec.name}: ${groups.join(', ')}\n`;
+      }
+    }
+
+    return text;
+  }
+
+  function showShare() {
+    const text = generateShareText();
+    document.getElementById('shareContent').innerHTML = `<textarea readonly id="shareTextarea">${text}</textarea>`;
+    document.getElementById('shareModal').classList.add('show');
+  }
+
+  function copyShare() {
+    const ta = document.getElementById('shareTextarea');
+    if (!ta) return;
+    ta.select();
+    navigator.clipboard.writeText(ta.value).then(() => {
+      alert('✅ Copiado');
+    }).catch(() => {
+      document.execCommand('copy');
+      alert('✅ Copiado (usa Ctrl+V)');
+    });
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('show');
+    });
+  });
+
+  // -- PERSISTENCE --
+  function saveState() {
+    try {
+      localStorage.setItem('panini_sections', JSON.stringify(sections));
+      localStorage.setItem('panini_data', JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  function loadState() {
+    try {
+      const s = localStorage.getItem('panini_sections');
+      const d = localStorage.getItem('panini_data');
+      if (s && d) {
+        sections = JSON.parse(s);
+        data = JSON.parse(d);
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  // Init
+  if (!loadState()) {
+    initDefault();
+  }
+  renderAll();
+
+  // Fix: Enter key on new team name
+  document.getElementById('newTeamName').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addTeam();
+  });
+  document.getElementById('newTeamCount').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addTeam();
+  });
+</script>
+</body>
+</html>

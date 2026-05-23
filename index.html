@@ -391,6 +391,10 @@
   <div class="bottom-actions">
     <button class="btn btn-green btn-sm" onclick="showShare()">📤 Compartir</button>
     <button class="btn btn-yellow btn-sm" onclick="showConfig()">⚙️ Equipos</button>
+    <button class="btn btn-outline btn-sm" onclick="exportData()">💾 Export</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importInput').click()">📂 Import</button>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-outline btn-sm" onclick="copyShareLink()">🔗 Link</button>
     <button class="btn btn-outline btn-sm" onclick="resetAll()">🗑️</button>
   </div>
 
@@ -482,15 +486,63 @@
   }
 
   function initDefault() {
-    // Set some default teams to get started
     sections = [
-      { id: generateId(), name: 'España', emoji: '🇪🇸', type: 'team', start: 1, count: 20 },
+      // ===== CONCACAF (anfitriones) =====
+      { id: generateId(), name: 'Canadá', emoji: '🇨🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'México', emoji: '🇲🇽', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'EE.UU.', emoji: '🇺🇸', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Panamá', emoji: '🇵🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Haití', emoji: '🇭🇹', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Curazao', emoji: '🇨🇼', type: 'team', start: 1, count: 20 },
+      // ===== CONMEBOL =====
       { id: generateId(), name: 'Argentina', emoji: '🇦🇷', type: 'team', start: 1, count: 20 },
       { id: generateId(), name: 'Brasil', emoji: '🇧🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Colombia', emoji: '🇨🇴', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Paraguay', emoji: '🇵🇾', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Ecuador', emoji: '🇪🇨', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Uruguay', emoji: '🇺🇾', type: 'team', start: 1, count: 20 },
+      // ===== UEFA =====
+      { id: generateId(), name: 'España', emoji: '🇪🇸', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Inglaterra', emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', type: 'team', start: 1, count: 20 },
       { id: generateId(), name: 'Francia', emoji: '🇫🇷', type: 'team', start: 1, count: 20 },
       { id: generateId(), name: 'Alemania', emoji: '🇩🇪', type: 'team', start: 1, count: 20 },
-      { id: generateId(), name: 'Inglaterra', emoji: '🇬🇧', type: 'team', start: 1, count: 20 },
-      { id: generateId(), name: 'Italia', emoji: '🇮🇹', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Países Bajos', emoji: '🇳🇱', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Bélgica', emoji: '🇧🇪', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Portugal', emoji: '🇵🇹', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Suiza', emoji: '🇨🇭', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Croacia', emoji: '🇭🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Rep. Checa', emoji: '🇨🇿', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Bosnia', emoji: '🇧🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Escocia', emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Turquía', emoji: '🇹🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Suecia', emoji: '🇸🇪', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Noruega', emoji: '🇳🇴', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Austria', emoji: '🇦🇹', type: 'team', start: 1, count: 20 },
+      // ===== AFC =====
+      { id: generateId(), name: 'Japón', emoji: '🇯🇵', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Corea del Sur', emoji: '🇰🇷', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Australia', emoji: '🇦🇺', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Arabia Saudí', emoji: '🇸🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Catar', emoji: '🇶🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Irak', emoji: '🇮🇶', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Jordania', emoji: '🇯🇴', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Uzbekistán', emoji: '🇺🇿', type: 'team', start: 1, count: 20 },
+      // ===== CAF =====
+      { id: generateId(), name: 'Marruecos', emoji: '🇲🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Argelia', emoji: '🇩🇿', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Costa de Marfil', emoji: '🇨🇮', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Egipto', emoji: '🇪🇬', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Túnez', emoji: '🇹🇳', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Sudáfrica', emoji: '🇿🇦', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'RD Congo', emoji: '🇨🇩', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Cabo Verde', emoji: '🇨🇻', type: 'team', start: 1, count: 20 },
+      // ===== OFC =====
+      { id: generateId(), name: 'Nueva Zelanda', emoji: '🇳🇿', type: 'team', start: 1, count: 20 },
+      // ===== Play-offs intercontinentales =====
+      { id: generateId(), name: 'Playoff AFC-CONMEBOL', emoji: '⏳', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Playoff CAF-OFC', emoji: '⏳', type: 'team', start: 1, count: 20 },
+      { id: generateId(), name: 'Playoff CONCACAF', emoji: '⏳', type: 'team', start: 1, count: 20 },
+      // ===== Secciones especiales =====
       { id: generateId(), name: 'Estadios', emoji: '🏟️', type: 'extra', start: 1, count: 16 },
       { id: generateId(), name: 'Extras', emoji: '⭐', type: 'extra', start: 1, count: 30 },
     ];
@@ -912,8 +964,76 @@
     return false;
   }
 
+  // -- EXPORT / IMPORT / SHARE LINK --
+
+  function exportData() {
+    const state = JSON.stringify({ sections, data }, null, 2);
+    const blob = new Blob([state], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'panini-mundial2026.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const state = JSON.parse(e.target.result);
+        if (!state.sections || !state.data) {
+          alert('❌ El archivo no tiene el formato correcto');
+          return;
+        }
+        if (!confirm('¿Importar estos datos? Se sobrescribirá tu colección actual.')) return;
+        sections = state.sections;
+        data = state.data;
+        saveState();
+        renderAll();
+        alert('✅ Datos importados correctamente');
+      } catch(err) {
+        alert('❌ Error al leer el archivo: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function copyShareLink() {
+    const state = JSON.stringify({ sections, data });
+    // Compress with encoding
+    const encoded = btoa(encodeURIComponent(state));
+    const url = window.location.href.split('#')[0] + '#' + encoded;
+    navigator.clipboard.writeText(url).then(() => {
+      alert('✅ Link copiado al portapapeles\n\nComparte este link con tu amigo. Él abrirá y verá TU colección en su navegador.');
+    }).catch(() => {
+      // Fallback
+      prompt('📍 Copia este link manualmente:', url);
+    });
+  }
+
+  // Load state from URL hash
+  function loadFromHash() {
+    const hash = window.location.hash.substring(1);
+    if (!hash || hash.length < 10) return false;
+    try {
+      const json = decodeURIComponent(atob(hash));
+      const state = JSON.parse(json);
+      if (state.sections && state.data) {
+        sections = state.sections;
+        data = state.data;
+        saveState();
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
   // Init
-  if (!loadState()) {
+  if (!loadFromHash() && !loadState()) {
     initDefault();
   }
   renderAll();
